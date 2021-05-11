@@ -11,8 +11,14 @@ function reverse(texte){
 	return res;
 }
 
+let inserts = ()=>{
+	for(var i = 0; i < 100000; i++){
+	  let nom = prenoms[Math.floor(Math.random()*prenoms.length)];
+	  let prenom = prenoms[Math.floor(Math.random()*prenoms.length)];
+	  db.clients.insert({nom:reverse(nom), prenom: prenom});
+	}
+	setTimeout(inserts, 5000);
+};
 
-for(var i = 0; i < 10000000; i++){
-  var prenom = prenoms[Math.floor(Math.random()*prenoms.length)];
-  db.clients.insert({nom:reverse(prenom), prenom: prenom});
-}
+inserts();
+
