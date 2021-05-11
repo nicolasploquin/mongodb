@@ -1,6 +1,6 @@
 // Selectionner la base admin pour s'authentifier en tant qu'utilisateur formation
-db = db.getSiblingDB("admin"); 
-db.auth("formation",<password>);
+// db = db.getSiblingDB("admin"); 
+// db.auth("formation",<password>);
 
 // Sélectionner la base association
 db = db.getSiblingDB("association"); 
@@ -43,7 +43,7 @@ db.animateurs.find({
 db.adherents.update({nom:"PARKER"},{$set:{email:"eparker@mail.bzh"}});
 
 // 4 - Suppression des activités le dimanche
-db.activites.remove({jour:'DI'});
+db.activites.remove({jour:/DI/i});
 
 // 5 - Regroupement des collection Ateliers et Activités
 
