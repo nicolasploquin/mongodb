@@ -17,7 +17,18 @@ $config = (Get-Content "$confPath\config.conf" -Raw) | ConvertFrom-Yaml
 $configPort = 25000
 $configDbPath = "$shardsPath\config"
 
+# Shard A et B
+$shardA = (Get-Content "$confPath\shardA1.conf" -Raw) | ConvertFrom-Yaml
+$shardAPort = 27010
+$shardADbPath = "$shardsPath\shardA"
+
+
+$shardB = (Get-Content "$confPath\shardB1.conf" -Raw) | ConvertFrom-Yaml
+$shardBPort = 27020
+$shardBDbPath = "$shardsPath\shardB"
+
 for ($i = 1; $i -le 3; $i++) {
+    # Config
     $dbPath = "$configDbPath\$i"
     mkdir $dbPath
     
@@ -30,6 +41,34 @@ for ($i = 1; $i -le 3; $i++) {
     ConvertTo-Yaml -Data $config | Out-File $confFile
     
     Start-Job -ScriptBlock { mongod.exe --config $args[0] } -ArgumentList $confFile
+
+    # ShardA
+    $dbPath = "$shardADbPath\$i"
+    mkdir $dbPath
+    
+    $shardA.net.port = $shardAPort + $i
+    $shardA.storage.dbPath = $dbPath
+    $shardA.systemLog.path = "$shardsLogPath\shardA$i.log"
+    
+    $confFile = "$confPath\shardA$i.conf"
+    
+    ConvertTo-Yaml -Data $shardA | Out-File $confFile
+    
+    Start-Job -ScriptBlock { mongod.exe --config $args[0] } -ArgumentList $confFile
+
+    # ShardB
+    $dbPath = "$shardBDbPath\$i"
+    mkdir $dbPath
+    
+    $shardB.net.port = $shardBPort + $i
+    $shardB.storage.dbPath = $dbPath
+    $shardB.systemLog.path = "$shardsLogPath\shardB$i.log"
+    
+    $confFile = "$confPath\shardB$i.conf"
+    
+    ConvertTo-Yaml -Data $shardB | Out-File $confFile
+    
+    Start-Job -ScriptBlock { mongod.exe --config $args[0] } -ArgumentList $confFile
 }
 
 while( -not (Test-NetConnection -ComputerName 127.0.0.1 -Port $($configPort+1)).TcpTestSucceeded ){
@@ -37,6 +76,7 @@ while( -not (Test-NetConnection -ComputerName 127.0.0.1 -Port $($configPort+1)).
 }
 
 mongo.exe --host localhost:$($configPort+1) $confPath\config.js
+mongo.exe --host localhost:$($shardBPort+1) $confPath\replica.js
 
 $router = (Get-Content "$confPath\router.conf" -Raw) | ConvertFrom-Yaml
 $router.net.port = 26000
