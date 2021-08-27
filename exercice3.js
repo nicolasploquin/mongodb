@@ -27,3 +27,44 @@ db.ateliers.aggregate([{        // from ateliers
 //   $count: "effectif"
 }]).forEach(printjson);
 
+
+if(true){
+    print("0 - Opérations du mois d'Avril 2016");
+    db.clients.aggregate([{
+        $unwind: "$comptes"
+    }, {
+        $unwind: "$comptes.operations"
+    }, {
+        $project: {
+            _id: false,
+            client_id: "$_id",
+            nom: true,
+            numero: "$comptes.numero",
+            intitule: "$comptes.intitule",
+            date: "$comptes.operations.date",
+            libelle: "$comptes.operations.libelle",
+            montant: "$comptes.operations.montant"
+        }
+    }, {
+        $match: {
+            date: {
+                $gte: ISODate('2016-04-01'), 
+                $lt: ISODate('2016-05-01')
+            }
+        }
+    }, {
+        $group: {
+            _id: "$numero",
+            numero: {$first: "$numero"},
+            nom: {$first: "$nom"},
+            intitule: {$first: "$intitule"},
+            solde: {$sum: "$montant"},
+            operations: {$sum: 1}               // count(*)
+        }
+    }, {
+    //     $unwind: "$operations"
+    // }, {
+        $limit: 3
+    }]).forEach(printjson);
+}
+
