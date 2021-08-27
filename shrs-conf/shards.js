@@ -17,3 +17,5 @@ db.chunks.find().pretty()
 // Stats database et collection
 use banque
 db.clients.stats()
+
+db.clients.getShardDistribution()
